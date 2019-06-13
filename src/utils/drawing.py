@@ -19,11 +19,13 @@ def draw(frame, results):
                       pt2=(result['right'], result['bottom']),
                       color=result['color'],
                       thickness=border_size)
+        '''
         cv2.rectangle(img=frame, 
                       pt1=(result['left'], result['top']),
                       pt2=(result['left'] + label_width + border_size*2, result['top'] + label_height + border_size*2),
                       color=result['color'], 
                       thickness=-1)
+        '''
         cv2.putText(img=frame, 
                     text=text, 
                     org=(result['left'] + border_size, result['top'] + label_height + border_size),

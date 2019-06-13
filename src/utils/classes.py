@@ -1,7 +1,9 @@
 import numpy as np
 import cv2
-
-from mscoco import table
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '../mscoco'))
+import table
 
 def get_classes(index):
     obj = [v for k, v in table.mscoco2017.items()]

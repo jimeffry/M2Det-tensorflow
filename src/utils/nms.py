@@ -51,7 +51,6 @@ def soft_nms(results, threshold, sigma=0.5):
             K: the number of valid boxes
             Dict: left, top, right, bottom, name, color, confidence
     '''
-
     outputs = []
     while len(results) > 0:
         ix = np.argmax([result['confidence'] for result in results])
@@ -70,7 +69,7 @@ def soft_nms(results, threshold, sigma=0.5):
             if results[jx]['confidence'] < threshold:
                 to_delete.append(jx)
 
-        for jx in to_delete[::-1]:
+        for jx in to_delete[::-1]: # delete from biger to small
             del results[jx]
 
     return outputs

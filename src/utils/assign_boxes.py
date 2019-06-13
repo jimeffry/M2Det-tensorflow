@@ -28,7 +28,7 @@ def encode_box(box, priors, assignment_threshold):
     encoded_box[:, :2][assign_mask] = box_center - assigned_priors_center
     encoded_box[:, :2][assign_mask] /= assigned_priors_wh
     encoded_box[:, :2][assign_mask] /= cfgs.Variance_XY # variance0
-    print(np.maximum(box_wh / assigned_priors_wh,1e-8))
+    #print(np.maximum(box_wh / assigned_priors_wh,1e-8))
     encoded_box[:, 2:4][assign_mask] = np.log(np.maximum(box_wh / assigned_priors_wh,1e-8))
     encoded_box[:, 2:4][assign_mask] /= cfgs.Variance_WH # variance1
     return encoded_box.ravel()

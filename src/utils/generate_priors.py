@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__),'../configs'))
 from config import cfgs
 
-def generate_priors():
+def generate_anchors():
     image_size = cfgs.ImgSize
     anchor_scale = cfgs.AnchorScale
     anchor_configs = {}
@@ -15,10 +15,10 @@ def generate_priors():
                 anchor_configs[shape].append(
                     (image_size / shape, scale_octave / float(cfgs.Scales_Num), aspect_ratio))
     boxes_all = []
-    for _, configs in anchor_configs.items():
+    for _, tmp_anchors in anchor_configs.items():
         boxes_level = []
-        for config in configs:
-            stride, octave_scale, aspect = config
+        for anchor in tmp_anchors:
+            stride, octave_scale, aspect = anchor
             base_anchor_size = anchor_scale * stride * (2 ** octave_scale)
             anchor_size_x_2 = base_anchor_size * aspect[0] / 2.0
             anchor_size_y_2 = base_anchor_size * aspect[1] / 2.0
@@ -41,5 +41,5 @@ def generate_priors():
 
 
 if __name__ == '__main__':
-    a = generate_priors()
+    a = generate_anchors()
     print(a.shape)

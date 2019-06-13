@@ -5,23 +5,32 @@ def normalize(img):
     img = (img - 127.5) / 128.0
     return img
 
+def norm_box(img,boxes):
+    img_h, img_w = img.shape[:2]
+    boxes = np.array(boxes,dtype=np.float32)
+    boxes[:,0] = boxes[:,0] / float(img_w)
+    boxes[:,1] = boxes[:,1] / float(img_h)
+    boxes[:,2] = boxes[:,2] / float(img_w)
+    boxes[:,3] = boxes[:,3] / float(img_h)
+    return boxes.tolist()
+
 def random_crop(img, boxes):
     if np.random.uniform() > 0.5:
         return img, boxes
-
-    x1, x2, y1, y2 = np.random.uniform(low=0.0, high=0.20, size=4)
+    #print('norm: ',boxes)
+    x1, x2, y1, y2 = np.random.uniform(low=0.0, high=0.10, size=4)
     img_h, img_w = img.shape[:2]
-
+    #print('rand ',x1,x2,y1,y2)
     p1 = int(x1 * img_w)
     p2 = int((1.0 - x2) * img_w)
     q1 = int(y1 * img_h)
     q2 = int((1.0 - y2) * img_h)
     img = img[q1:q2, p1:p2, :]
-
     cropped_boxes = []
     for box in boxes:
         xmin, ymin, xmax, ymax = box[:4]
         if ((x1 >= xmax) or (xmin >= 1.0 - x2) or (y1 >= ymax) or (ymin >= 1.0 - y2)):
+            #print('pass:',box)
             continue
         xmin = max((xmin - x1) / (1.0 - x1 - x2), 0.0)
         xmax = 1.0 - max((1.0 - xmax - x2) / (1.0 - x1 - x2), 0.0)
@@ -87,7 +96,7 @@ def multi_scale(img, boxes):
 
 def scale(img, labels, img_size):
     img_h, img_w = img.shape[:2]
-    ratio = max(img_h, img_w) / img_size
+    ratio = max(img_h, img_w) / float(img_size)
     new_h = int(img_h / ratio)
     new_w = int(img_w / ratio)
     ox = (img_size - new_w) // 2
@@ -99,20 +108,42 @@ def scale(img, labels, img_size):
     scaled_labels = []
     for label in labels:
         xmin, ymin, xmax, ymax = label[0:4]
-        xmin = (xmin * new_w + ox) / img_size
-        ymin = (ymin * new_h + oy) / img_size
-        xmax = (xmax * new_w + ox) / img_size
-        ymax = (ymax * new_h + oy) / img_size
+        xmin = (xmin * new_w + ox) #/ img_size
+        ymin = (ymin * new_h + oy) #/ img_size
+        xmax = (xmax * new_w + ox) #/ img_size
+        ymax = (ymax * new_h + oy) #/ img_size
         label = [xmin, ymin, xmax, ymax] + label[4:]
         scaled_labels.append(label)
 
     return out, scaled_labels
 
 def augment(img, boxes, input_size):
-    img, boxes = random_crop(img, boxes)
-    img, boxes = random_flip(img, boxes)
+    boxes = norm_box(img,boxes)
+    #img, boxes = random_crop(img, boxes)
+    #print("crop,",boxes)
+    #img, boxes = random_flip(img, boxes)
+    #print('clip ',boxes)
     #img, boxes = multi_scale(img, boxes)
     #img = down_sample(img)
     img, boxes = scale(img, boxes, input_size)
-    img = normalize(img)
+    #img = normalize(img)
     return img, boxes
+
+def label_show(img,boxes):
+    for box in boxes:
+        box = map(int,box)
+        cv2.rectangle(img,pt1=(box[0],box[1]),pt2=(box[2], box[3]),color=(0,0,255))
+
+if __name__=='__main__':
+    img = cv2.imread("../../data/innsbruck.png")
+    bb = [[100,100,200,200,0,1],[210,10,310,50,1,0]]
+    print(np.shape(bb))
+    img_c = img.copy()
+    label_show(img_c,bb)
+    imga,box = augment(img,bb,320)
+    #box = box*320
+    print(box)
+    label_show(imga,box)
+    cv2.imshow('src',img_c)
+    cv2.imshow('aug',imga)
+    cv2.waitKey(0)

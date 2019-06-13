@@ -1,0 +1,9 @@
+bicycle,7113
+bus,6069
+car,43867
+motorcycle,8725
+person,262465
+stop_sign,1983
+traffic_light,12884
+truck,9973
+total:71536 imgs
