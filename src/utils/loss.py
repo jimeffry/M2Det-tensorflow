@@ -20,6 +20,11 @@ def calc_focal_loss(cls_outputs, cls_targets, alpha=0.25, gamma=2.0):
     neg_loss = - (1 - alpha) * tf.pow(neg, gamma) * tf.log(tf.clip_by_value(1.0 - cls_outputs, 1e-15, 1.0))
     loss = tf.reduce_sum(pos_loss + neg_loss, axis=[1, 2])
     return loss
+
+def calc_entry_loss(cls_outputs, cls_targets):
+    pos_loss = -cls_targets * tf.log(tf.clip_by_value(cls_outputs, 1e-15, 1.0))
+    loss = tf.reduce_sum(pos_loss, axis=[1, 2])
+    return loss
     
 def calc_cls_loss(cls_outputs, cls_targets, positive_flag):
     batch_size = tf.shape(cls_outputs)[0]
@@ -50,22 +55,21 @@ def calc_cls_loss(cls_outputs, cls_targets, positive_flag):
     cls_loss /= (num_positives + tf.to_float(num_neg_batch))
     return cls_loss
     
-def calc_box_loss(box_outputs, box_targets, positive_flag, delta=0.1):
-    num_positives = tf.reduce_sum(positive_flag, axis=-1) # shape: [batch_size,]
+def calc_box_loss(box_outputs, box_targets, positive_flag, delta=1.0):
+    num_positives = tf.reduce_sum(positive_flag, axis=-1) # shape: [batch_size,anchor_num]
     normalizer = num_positives * 4.0
-    normalizer = tf.where(tf.not_equal(normalizer, 0), normalizer, tf.ones_like(normalizer)) # to avoid division by 0
+    normalizer = tf.where(tf.not_equal(normalizer,0),normalizer,tf.ones_like(normalizer)) #to avoid division by 0
     loss_scale = 2.0 - box_targets[:, :, 2:3] * box_targets[:, :, 3:4]
-
-    sq_loss = 0.5 * (box_targets - box_outputs) ** 2
-    abs_loss = 0.5 * delta ** 2 + delta * (tf.abs(box_outputs - box_targets) - delta)
+    sq_loss = 0.5 * (box_outputs - box_targets) ** 2
+    #abs_loss = 0.5 * delta ** 2 + delta * (tf.abs(box_outputs - box_targets) - delta)
+    abs_loss = tf.abs(box_outputs - box_targets) - 0.5
     l1_loss = tf.where(tf.less(tf.abs(box_outputs - box_targets), delta), sq_loss, abs_loss)
-
-    box_loss = tf.reduce_sum(l1_loss, axis=-1, keepdims=True)
-    box_loss = box_loss * loss_scale
-    box_loss = tf.reduce_sum(box_loss, axis=-1)
+    #box_loss = tf.reduce_sum(l1_loss, axis=-1, keepdims=True)
+    #box_loss = box_loss * loss_scale
+    #box_loss = tf.reduce_sum(box_loss, axis=-1)
+    box_loss = tf.reduce_sum(l1_loss, axis=-1)
     box_loss = tf.reduce_sum(box_loss * positive_flag, axis=-1)
     box_loss = box_loss / normalizer
-
     return box_loss
 
 def calc_loss(y_true, y_pred, box_loss_weight):
@@ -77,21 +81,18 @@ def calc_loss(y_true, y_pred, box_loss_weight):
             last element of y_true denotes if the box is positive or negative:
     Returns:
         total_loss:
-
     cf. https://github.com/tensorflow/tpu/blob/master/models/official/retinanet/retinanet_model.py
     """
-    
     box_outputs = y_pred[:, :, :4]
     box_targets = y_true[:, :, :4]
     cls_outputs = y_pred[:, :, 4:]
     cls_targets = y_true[:, :, 4:-1]
     positive_flag = y_true[:, :, -1]
     #num_positives = tf.reduce_sum(positive_flag, axis=-1) # shape: [batch_size,]
-
     box_loss = calc_box_loss(box_outputs, box_targets, positive_flag)
     ##cls_loss = calc_cls_loss(cls_outputs, cls_targets, positive_flag)
-    cls_loss = calc_focal_loss(cls_outputs, cls_targets)
-
+    #cls_loss = calc_focal_loss(cls_outputs, cls_targets)
+    cls_loss = calc_entry_loss(cls_outputs,cls_targets)
     total_loss = cls_loss + box_loss_weight * box_loss
 
-    return tf.reduce_mean(total_loss)
+    return tf.reduce_mean(total_loss),box_loss,cls_loss

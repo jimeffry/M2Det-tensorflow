@@ -12,7 +12,7 @@ class M2Det:
         self.use_sfam = use_sfam
         self.levels = 8
         self.scales = 6
-        self.num_priors = 9 # 3 scales and 3 ratios
+        self.num_priors = 6 # 2 scales and 3 ratios
         self.build(inputs, is_training)
 
     def build(self, inputs, is_training):

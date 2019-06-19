@@ -177,7 +177,7 @@ def process_imgs(imgs,gt_labels,num_obj,batch_size,anchors):
         assignment = assign_boxes(boxes, anchors)
         imgs_out.append(img)
         gt_label_box.append(assignment)
-    return np.array(imgs_out),np.array(gt_label_box)
+    return np.array(imgs_out,dtype=np.float32),np.array(gt_label_box,dtype=np.float32)
 
 if __name__=='__main__':
     img = cv2.imread("../../data/innsbruck.png")
@@ -188,7 +188,7 @@ if __name__=='__main__':
     img_bat = np.expand_dims(img,0)
     bb_bat = [bb]
     priors = generate_anchors()
-    img_out,bb_out = process_imgs(img_bat,bb_bat,1,priors)
+    img_out,bb_out = process_imgs(img_bat,bb_bat,2,1,priors)
     #print(bb_out)
     print(img_out[0,0,:10,0])
     print(img_out[0,-5:-1,-10,1])
