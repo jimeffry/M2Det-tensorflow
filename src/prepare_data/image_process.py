@@ -31,6 +31,8 @@ def encode_box(box, priors, assignment_threshold):
     iou = inter / union
 
     encoded_box = np.zeros((len(priors), 5))
+    anchor_idx = np.argmax(iou)
+    iou[anchor_idx] = 1.0
     assign_mask = iou >= assignment_threshold
     encoded_box[:, -1][assign_mask] = iou[assign_mask]
     assigned_priors = priors[assign_mask] 

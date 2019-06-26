@@ -29,7 +29,7 @@ def calc_entry_loss(cls_outputs, cls_targets):
 def calc_cls_loss(cls_outputs, cls_targets, positive_flag):
     batch_size = tf.shape(cls_outputs)[0]
     num_anchors = tf.to_float(tf.shape(cls_outputs)[1])
-    num_positives = tf.reduce_sum(positive_flag, axis=-1) # shape: [batch_size,]
+    num_positives = tf.reduce_sum(positive_flag, axis=-1) # shape: [batch_size,anchor_num]
     num_negatives = tf.minimum(3 * num_positives, num_anchors - num_positives) # neg_pos_ratio is 3
     negative_mask = tf.greater(num_negatives, 0)
 

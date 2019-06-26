@@ -32,7 +32,7 @@ def main(args):
             if not ret: break
             results = det.detect(img)
             draw(img, results)
-            cv2.imshow('', img)
+            cv2.imshow('video', img)
             cv2.waitKey(1)
     elif os.path.isdir(args.inputs):
         paths = glob.glob(os.path.join(args.inputs, '*'))
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     parser.add_argument('--input_size', type=int, default=320)
     parser.add_argument('--num_classes', type=int, default=80)
     parser.add_argument('--threshold', type=float, default=0.3)
-    parser.add_argument('--sfam', action='store_true', default=True)
+    parser.add_argument('--sfam', action='store_true', default=False)
     parser.add_argument('--gpu', type=str, default='-1')
     #os.environ['CUDA_VISIBLE_DEVICES'] = parser.parse_args().gpu
     main(parser.parse_args())

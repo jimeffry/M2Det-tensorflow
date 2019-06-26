@@ -55,24 +55,25 @@ class Detector:
         inp = np.expand_dims(inp,0)
         outs = self.sess.run(self.net.prediction, feed_dict={self.inputs: inp})
         outs = outs[0]
-        print('out,',outs.shape)
+        #print('out,',outs.shape)
         boxes = decode_boxes(outs[:, :4],self.priors)
         preds = np.argmax(outs[:, 4:], axis=1)
         confidences = np.max(outs[:, 4:], axis=1)
-        print('preds',preds.shape,confidences[:5])
-        print(preds[:5])
+        #print('preds',preds.shape,confidences[:5])
+        #print(preds[:5])
         # skip background class
         mask = np.where(preds > 0)
-        print('cls_mask',mask[0].shape)
+        #print('cls_mask',mask[0].shape)
         boxes = boxes[mask]
         preds = preds[mask]
         confidences = confidences[mask]
 
         mask = np.where(confidences >= cfgs.AnchorThreshold)
-        print('confidence mask',mask[0].shape)
+        #print('confidence mask and threshold',mask[0].shape,cfgs.AnchorThreshold)
         boxes = boxes[mask]
         preds = preds[mask]
         confidences = confidences[mask]
+        #print('final score:',confidences)
         results = []
         for box, clsid, conf in zip(boxes, preds, confidences):
             xmin, ymin, xmax, ymax = box
@@ -91,7 +92,9 @@ class Detector:
                 'color': color,
                 'confidence': conf,
             })
-
-        #results = nms(results)
-        results = soft_nms(results, self.threshold)
+        #results = nms(results,1-self.threshold,'Min')
+        results = nms(results,self.threshold)
+        results = nms(results,1- self.threshold,'Min')
+        #results = soft_nms(results, self.threshold)
+        #print("after nms result num: ",len(results))
         return results

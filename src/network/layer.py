@@ -1,7 +1,9 @@
 import numpy as np
 import tensorflow as tf
+import tensorflow.contrib.layers as tfc
 
-def conv2d_layer(x, filters, kernel_size, strides, without_padding=False, use_bias=False):
+def conv2d_layer(x, filters, kernel_size, strides, without_padding=False, use_bias=False,w_regular=None):
+    #tfc.l2_regularizer(5e-5)
     if without_padding:
         padding = 'VALID'
     elif strides > 1:
@@ -16,7 +18,7 @@ def conv2d_layer(x, filters, kernel_size, strides, without_padding=False, use_bi
         inputs=x, filters=filters, kernel_size=kernel_size, strides=strides,
         padding=padding, use_bias=use_bias,
         kernel_initializer=tf.variance_scaling_initializer(),
-        data_format='channels_last')
+        data_format='channels_last',kernel_regularizer=w_regular)
 
 def batch_norm(x, is_training):
     return tf.layers.batch_normalization(
